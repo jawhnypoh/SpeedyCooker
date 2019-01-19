@@ -10,9 +10,13 @@ import android.os.Handler;
 import android.os.ParcelUuid;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Set;
+import java.util.UUID;
 
 public class Bluetooth {
     private String DEVICE_NAME = "HC-05"; // Figure out bluetooth device name
@@ -21,6 +25,13 @@ public class Bluetooth {
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothSocket mSocket;
     private BluetoothDevice mDevice;
+
+    private InputStream mInputStream;
+    private OutputStream mOutputStream;
+
+    private Thread workerThread;
+    private byte[] readBuffer;
+    private int readBufferPosition;
 
     private Context context;
     private MainActivity mainActivity;
@@ -102,9 +113,107 @@ public class Bluetooth {
         }
         // Otherwise, device was found!
         else {
-            Toast toast = Toast.makeText(context, "Bluetooth device found", Toast.LENGTH_LONG);
+            Toast toast = Toast.makeText(context, "Bluetooth device found: " + DEVICE_UUID, Toast.LENGTH_LONG);
             toast.show();
         }
         return 0;
+    }
+
+    // Open a Bluetooth connection with DEVICE_NAME
+    public void openBTConnection() throws IOException {
+        // Create socket, connect to device, grab I/O data streams
+        UUID uuid = UUID.fromString(DEVICE_UUID); // Standard SerialPortService ID
+
+        mSocket = mDevice.createRfcommSocketToServiceRecord(uuid);
+        mSocket.connect();
+
+        mOutputStream = mSocket.getOutputStream();
+        mInputStream = mSocket.getInputStream();
+
+        Toast toast = Toast.makeText(context, "Bluetooth connection opened", Toast.LENGTH_LONG);
+        toast.show();
+    }
+
+    public void beginListenForData()
+    {
+        Toast toast = Toast.makeText(context, "Listening for incoming Bluetooth data in background", Toast.LENGTH_LONG);
+        toast.show();
+
+        final Handler handler = new Handler();
+        final byte delimiter = 10; //This is the ASCII code for a newline character '\n'
+
+        stopWorker = false;
+        readBufferPosition = 0;
+        readBuffer = new byte[1024];
+        workerThread = new Thread(new Runnable()
+        {
+            public void run()
+            {
+                while(!Thread.currentThread().isInterrupted() && !stopWorker) // While stopWorker is false
+                {
+                    try
+                    {
+                        // If there is no input data stream then bail
+                        if(mInputStream == null) {
+                            stopWorker = true;
+                            break;
+                        }
+
+
+                        int bytesAvailable = mInputStream.available();
+                        if(bytesAvailable > 0) // If there is data available to be read in
+                        {
+                            // Read in the data and loop through each byte
+                            byte[] packetBytes = new byte[bytesAvailable];
+                            mInputStream.read(packetBytes);
+                            for(int i=0;i<bytesAvailable;i++)
+                            {
+                                byte b = packetBytes[i];
+                                if(b == delimiter) // If the new line character is found
+                                {
+                                    // Grab the read data and pass it to the MainActivity
+                                    final byte[] encodedBytes = new byte[readBufferPosition];
+                                    System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
+                                    readBufferPosition = 0;
+                                    handler.post(new Runnable()
+                                    {
+                                        public void run()
+                                        {
+                                            mainActivity.receiveData(encodedBytes); // MAKE SURE MAINACTIVITY IMPLEMENTS THIS METHOD
+                                        }
+                                    });
+                                }
+                                else // While the delimeter (new line char) is not found, keep looping through bytes
+                                {
+                                    readBuffer[readBufferPosition++] = b;
+                                }
+                            }
+                        }
+                    }
+                    catch (IOException ex)
+                    {
+                        stopWorker = true;
+                    }
+                }
+            }
+        });
+
+        workerThread.start(); // Start the background thread
+    }
+
+    // Send a byte of data over Bluetooth
+    public void sendData(byte data) throws IOException {
+        mOutputStream.write(data);
+    }
+
+    // Close the Bluetooth connection and clean stuff up
+    public void closeBT() throws IOException {
+        stopWorker = true;
+
+        mOutputStream.close();
+        mInputStream.close();
+        mSocket.close();
+        Toast toast = Toast.makeText(context, "Bluetooth closed", Toast.LENGTH_LONG);
+        toast.show();
     }
 }
