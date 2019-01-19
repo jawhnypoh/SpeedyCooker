@@ -25,10 +25,10 @@ public class MainActivity extends AppCompatActivity {
         timeText = (TextView)findViewById(R.id.time_text);
         timeButton = (Button)findViewById(R.id.time_button);
 
-        myFunction();
+        myButton();
     }
 
-    public void myFunction(){
+    public void myButton(){
         timeButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
