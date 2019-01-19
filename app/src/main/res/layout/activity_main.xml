@@ -35,6 +35,15 @@
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/time_button"
+            android:text="Button"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="200sp"
+            android:layout_below="@+id/time_text"/>
+
     </RelativeLayout>
 
 </android.support.constraint.ConstraintLayout>
