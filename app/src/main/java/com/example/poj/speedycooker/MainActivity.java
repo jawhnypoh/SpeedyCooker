@@ -16,6 +16,8 @@ public class MainActivity extends AppCompatActivity {
     private Button timeButton;
     private theCountDownTimer myCountDownTimer;
 
+    Bluetooth bt;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
