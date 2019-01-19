@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v){
 
                 Log.d(TAG,"Button clicked");
-                    myCountDownTimer = new theCountDownTimer(20000, 1);
+                    myCountDownTimer = new theCountDownTimer(10000, 1);
                     myCountDownTimer.start();
             }
         });
@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onFinish() {
-            finish();
+            timeText.setText("Eyyyyy");
         }
     }
 }
