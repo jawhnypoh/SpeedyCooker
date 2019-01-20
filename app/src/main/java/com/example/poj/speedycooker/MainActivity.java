@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        createNotificationChannel();
+        //createNotificationChannel();
 
         notificationManager = NotificationManagerCompat.from(this);
 
@@ -46,48 +46,48 @@ public class MainActivity extends AppCompatActivity {
         bt = new Bluetooth(getApplicationContext(), this);
 
         myButton();
-        connectBluetooth();
+//        connectBluetooth();
     }
 
-    public void connectBluetooth() {
-        // If could not find bluetooth device, error
-        if(bt.findBT() == -1) {
-            return;
-        }
-
-        // Try to open a Bluetooth connection
-        try {
-            bt.openBTConnection();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // Start to listen for data
-        bt.beginListenForData();
-    }
-
-    // Bluetooth instance calls this function to send new data to the BT device
-    public void sendBTData() {
-        try {
-            bt.sendData((byte)'0');
-            Log.d(TAG, "Data sending to BT device...");
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-    }
-
-    // Bluetooth instance calls this function when new data is received
-    public void receiveData(byte[] data) {
-        // If the data exists and != 0
-        if(data.length > 0 && data[0] != 0) {
-            int dataInt = data[0];
-
-            Log.d(TAG, "Receiving data: " + data);
-
-            tempText.setText("" + dataInt);
-        }
-    }
+//    public void connectBluetooth() {
+//        // If could not find bluetooth device, error
+//        if(bt.findBT() == -1) {
+//            return;
+//        }
+//
+//        // Try to open a Bluetooth connection
+//        try {
+//            bt.openBTConnection();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        // Start to listen for data
+//        bt.beginListenForData();
+//    }
+//
+//    // Bluetooth instance calls this function to send new data to the BT device
+//    public void sendBTData() {
+//        try {
+//            bt.sendData((byte)'0');
+//            Log.d(TAG, "Data sending to BT device...");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            return;
+//        }
+//    }
+//
+//    // Bluetooth instance calls this function when new data is received
+//    public void receiveData(byte[] data) {
+//        // If the data exists and != 0
+//        if(data.length > 0 && data[0] != 0) {
+//            int dataInt = data[0];
+//
+//            Log.d(TAG, "Receiving data: " + data);
+//
+//            tempText.setText("" + dataInt);
+//        }
+//    }
 
     public void myButton(){
         final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "001")
@@ -132,8 +132,11 @@ public class MainActivity extends AppCompatActivity {
 
     public class theCountDownTimer extends CountDownTimer {
 
+        NotificationCompat.Builder bar = buildNot();
+        long MAX_CONST;
         public theCountDownTimer (long millisInFuture, long countDownInterval) {
             super(millisInFuture, countDownInterval);
+            MAX_CONST = millisInFuture;
         }
 
         @Override
@@ -157,12 +160,12 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onFinish() {
-            // Try to close the Bluetooth socket
-            try {
-                bt.closeBT();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//            // Try to close the Bluetooth socket
+//            try {
+//                bt.closeBT();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
 
             timeText.setText("Eyyyyy");
         }
