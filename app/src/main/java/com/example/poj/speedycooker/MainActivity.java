@@ -1,5 +1,6 @@
 package com.example.poj.speedycooker;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -17,7 +18,7 @@ import android.os.CountDownTimer;
 
 import java.io.IOException;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
     private static String TAG = "MainActivity: ";
 
@@ -41,7 +42,10 @@ public class MainActivity extends AppCompatActivity {
         timeText = (TextView)findViewById(R.id.time_text);
         timeButton = (Button)findViewById(R.id.time_button);
 
+        bt = new Bluetooth(getApplicationContext(), this);
+
         myButton();
+        connectBluetooth();
     }
 
     public void connectBluetooth() {
