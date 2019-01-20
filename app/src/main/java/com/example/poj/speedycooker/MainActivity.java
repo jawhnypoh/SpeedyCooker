@@ -190,6 +190,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+
         //write method
         public void write(String input) {
             Log.d(TAG, "input string is: " + input);
