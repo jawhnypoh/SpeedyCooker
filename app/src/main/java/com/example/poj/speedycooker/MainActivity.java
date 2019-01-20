@@ -15,6 +15,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.os.CountDownTimer;
 
+import java.io.IOException;
+
 public class MainActivity extends AppCompatActivity {
 
     private static String TAG = "MainActivity: ";
@@ -23,6 +25,8 @@ public class MainActivity extends AppCompatActivity {
     private Button timeButton;
     private theCountDownTimer myCountDownTimer;
     private NotificationManagerCompat notificationManager;
+
+    private Bluetooth bt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +42,31 @@ public class MainActivity extends AppCompatActivity {
         timeButton = (Button)findViewById(R.id.time_button);
 
         myButton();
+    }
+
+    public void connectBluetooth() {
+        // If could not find bluetooth device, error
+        if(bt.findBT() == -1) {
+            return;
+        }
+
+        // Try to open a Bluetooth connection
+        try {
+            bt.openBTConnection();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Start to listen for data
+        bt.beginListenForData();
+    }
+
+    // Bluetooth instance calls this function when new data is received
+    public void receiveData(byte[] data) {
+        // If the data exists and != 0
+        if(data.length > 0 && data[0] != 0) {
+            int dataInt = data[0];
+        }
     }
 
     public void myButton(){
