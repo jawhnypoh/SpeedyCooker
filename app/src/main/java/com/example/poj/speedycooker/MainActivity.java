@@ -65,11 +65,26 @@ public class MainActivity extends Activity {
         bt.beginListenForData();
     }
 
+    // Bluetooth instance calls this function to send new data to the BT device
+    public void sendBTData() {
+        try {
+            bt.sendData((byte)'0');
+            Log.d(TAG, "Data sending to BT device...");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+    }
+
     // Bluetooth instance calls this function when new data is received
     public void receiveData(byte[] data) {
         // If the data exists and != 0
         if(data.length > 0 && data[0] != 0) {
             int dataInt = data[0];
+
+            Log.d(TAG, "Receiving data: " + data);
+
+            tempText.setText("" + dataInt);
         }
     }
 
@@ -88,9 +103,10 @@ public class MainActivity extends Activity {
                     myCountDownTimer = new theCountDownTimer(10000, 1);
                     myCountDownTimer.start();
 
-
                     notificationManager.notify(001, mBuilder.build());
 
+                    // Call function to send data to BT device
+                    sendBTData();
             }
         });
 
@@ -112,6 +128,13 @@ public class MainActivity extends Activity {
 
         @Override
         public void onFinish() {
+            // Try to close the Bluetooth socket
+            try {
+                bt.closeBT();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             timeText.setText("Eyyyyy");
         }
     }
