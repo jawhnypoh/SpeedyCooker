@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
         timeButton = (Button)findViewById(R.id.time_button);
         choice1button = (Button)findViewById(R.id.choice1button);
 
-        bt = new Bluetooth(getApplicationContext(), this);
+        //bt = new Bluetooth(getApplicationContext(), this);
 
         myButton();
 //        connectBluetooth();
