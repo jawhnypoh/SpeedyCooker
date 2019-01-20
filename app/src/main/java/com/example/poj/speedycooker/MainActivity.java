@@ -1,14 +1,13 @@
 package com.example.poj.speedycooker;
 
-import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -19,9 +18,6 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.os.CountDownTimer;
 import android.widget.Toast;
-import com.example.poj.speedycooker.Bluetooth;
-
-import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,8 +27,6 @@ public class MainActivity extends AppCompatActivity {
     private Button timeButton, choice1button;
     private theCountDownTimer myCountDownTimer;
     private NotificationManagerCompat notificationManager;
-
-    private Handler mHandler;
 
     private BluetoothAdapter mBluetoothAdapter;
     private Bluetooth bt = null;
@@ -44,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        //createNotificationChannel();
+//        createNotificationChannel();
 
         notificationManager = NotificationManagerCompat.from(this);
 
@@ -76,9 +70,30 @@ public class MainActivity extends AppCompatActivity {
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-            // Otherwise, setup the chat session
+            // Otherwise, setup the our application
         }
     }
+
+    private Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case Constants.MESSAGE_READ:
+                    byte[] readBuf = (byte[]) msg.obj;
+                    // construct a string from the valid bytes in the buffer
+                    String readMessage = new String(readBuf, 0, msg.arg1);
+
+                    tempText.setText("Received Data: " + readMessage);
+                    break;
+
+                case Constants.MESSAGE_WRITE:
+                    byte[] writeBuf = (byte[]) msg.obj;
+                    // construct a string from the buffer
+                    String writeMessage = new String(writeBuf);
+                    break;
+            }
+        }
+    };
 
     public void myButton(){
         final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "001")
@@ -99,9 +114,7 @@ public class MainActivity extends AppCompatActivity {
 
                 sendMessage("Test");
 
-                Toast.makeText(getApplicationContext(), "Sending data to bluetooth device...", Toast.LENGTH_LONG).show();
-
-                myCountDownTimer = new theCountDownTimer(70000, 1);
+                myCountDownTimer = new theCountDownTimer(5000, 1);
                 myCountDownTimer.start();
 
             }
@@ -116,6 +129,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void sendMessage(String message) {
+
+        Toast.makeText(getApplicationContext(), "Sending data to bluetooth device...", Toast.LENGTH_LONG).show();
+
+
         Log.d(TAG, "Message is: " + message);
         if(message.length() > 0) {
             // Get the message bytes and tell the BluetoothChatService to write
@@ -125,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void receiveMessage() {
-        
+
     }
 
     public NotificationCompat.Builder buildNot(){
@@ -152,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onTick(long millisUntilFinished) {
 
-            int progress = (int) (millisUntilFinished / 5000);
+            int progress = (int) (millisUntilFinished / 10000);
             int progress1 = (int) (millisUntilFinished / 1000);
 
             int progressPer = (int) ((double)millisUntilFinished/MAX_CONST*100);

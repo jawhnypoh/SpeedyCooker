@@ -47,8 +47,7 @@
             android:text="Button"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="80sp"
-            android:layout_below="@+id/time_text"
-            android:onClick="sendNotification"/>
+            android:layout_below="@+id/time_text" />
 
         <Button
             android:layout_width="wrap_content"

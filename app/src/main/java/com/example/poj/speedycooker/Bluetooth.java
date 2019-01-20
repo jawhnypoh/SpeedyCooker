@@ -346,6 +346,7 @@ public class Bluetooth {
             mmOutStream = tmpOut;
         }
 
+        // Continue looping to listen for input
         public void run() {
             Log.i(TAG, "Begin mConnectedThread");
 
@@ -355,7 +356,6 @@ public class Bluetooth {
             // Keep listening to input stream until exception occurs
             while (true) {
                 try {
-                    // Read from InputStream
                     // Read from the InputStream.
                     numBytes = mmInStream.read(mmBuffer);
                     // Send the obtained bytes to the UI activity.
