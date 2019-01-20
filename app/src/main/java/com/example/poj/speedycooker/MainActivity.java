@@ -18,12 +18,12 @@ import android.os.CountDownTimer;
 
 import java.io.IOException;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     private static String TAG = "MainActivity: ";
 
     private TextView tempText, timeText;
-    private Button timeButton;
+    private Button timeButton, choice1button;
     private theCountDownTimer myCountDownTimer;
     private NotificationManagerCompat notificationManager;
 
@@ -41,6 +41,7 @@ public class MainActivity extends Activity {
         tempText = (TextView)findViewById(R.id.temp_text);
         timeText = (TextView)findViewById(R.id.time_text);
         timeButton = (Button)findViewById(R.id.time_button);
+        choice1button = (Button)findViewById(R.id.choice1button);
 
         bt = new Bluetooth(getApplicationContext(), this);
 
@@ -93,23 +94,40 @@ public class MainActivity extends Activity {
                 .setSmallIcon(R.drawable.ic_launcher_background)
                 .setContentTitle("NOTIFICATION")
                 .setContentText("This is a notification")
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setDefaults(NotificationCompat.DEFAULT_ALL);
+        final int PROGRESS_MAX = 100;
+        int PROGRESS_CURRENT = 0;
+        mBuilder.setProgress(PROGRESS_MAX,PROGRESS_CURRENT, false);
 
         timeButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
 
                 Log.d(TAG,"Button clicked");
-                    myCountDownTimer = new theCountDownTimer(10000, 1);
-                    myCountDownTimer.start();
+                myCountDownTimer = new theCountDownTimer(70000, 1);
+                myCountDownTimer.start();
 
-                    notificationManager.notify(001, mBuilder.build());
-
-                    // Call function to send data to BT device
-                    sendBTData();
             }
         });
+        choice1button.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                notificationManager.notify(001, mBuilder.build());
+            }
+        });
+    }
 
+    public NotificationCompat.Builder buildNot(){
+
+        Log.d(TAG, "buildNot called");
+        final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "001")
+                .setSmallIcon(R.drawable.ic_launcher_background)
+                .setContentTitle("NOTIFICATION")
+                .setContentText("This is a notification")
+                .setPriority(NotificationCompat.PRIORITY_HIGH);
+        //.setDefaults(NotificationCompat.DEFAULT_ALL);
+        return mBuilder;
     }
 
     public class theCountDownTimer extends CountDownTimer {
@@ -120,10 +138,21 @@ public class MainActivity extends Activity {
 
         @Override
         public void onTick(long millisUntilFinished) {
+
             int progress = (int) (millisUntilFinished / 10 % 100);
             int progress1 = (int) (millisUntilFinished / 1000);
 
-            timeText.setText(Integer.toString(progress1)+ ":" + Integer.toString(progress));
+            int progressPer = (int) ((double)millisUntilFinished/MAX_CONST*100);
+            Log.d(TAG, Integer.toString(progressPer));
+            if (progress1>59){
+                timeText.setText(Integer.toString(progress1/60)+ " min " + Integer.toString(progress1%60) + " s");
+            }
+            else {
+                timeText.setText(Integer.toString(progress1) + ":" + Integer.toString(progress) + " s");
+            }
+            notificationManager.notify(001, bar.build());
+            bar.setProgress(100,progressPer, false);
+            bar.setContentText(Integer.toString(progress1/60)+ " min " + Integer.toString(progress1%60) + " s remaining");
         }
 
         @Override
@@ -137,27 +166,5 @@ public class MainActivity extends Activity {
 
             timeText.setText("Eyyyyy");
         }
-    }
-//    public void sendNotification(View view){
-//        NotificationCompat.Builder myBuilder = new NotificationCompat.Builder(this)
-//                //.setSmallIcon(R.drawable.notification_icon)
-//                .setContentTitle("NOTIFICATION")
-//                .setContentText("This is a notification")
-//                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
-//        NotificationManager myNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-//        //NotificationManager.notify();
-//        myNotificationManager.notify(001, myBuilder.build());
-//    }
-
-    private void createNotificationChannel() {
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.0){
-//            CharSequence name = getString(R.string.channel_name);
-//            String description = getString(R.string.channel_description);
-//            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-//            NotificationChannel channel = new NotificationChannel("001", name, importance);
-//            channel.setDescription(description);
-//            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-//            notificationManager.createNotificationChannel(channel);
-//        }
     }
 }
