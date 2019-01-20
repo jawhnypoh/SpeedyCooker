@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
                 if(msg.what == handlerState) {
                     Log.d(TAG, "Content in msg ");
                     String readMessage = (String) msg.obj;
-                    tempText.setText("Received data: " + readMessage);
+                    tempText.setText("Data: " + readMessage);
                 }
             }
         };
