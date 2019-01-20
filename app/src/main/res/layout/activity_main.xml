@@ -16,7 +16,7 @@
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
             android:id="@+id/temp_text"
-            android:text="30 DEGREES"
+            android:text="30 C"
             android:textColor="#ffffff"
             android:textSize="50sp"
             android:layout_marginTop="150sp"
@@ -31,7 +31,7 @@
             android:layout_centerHorizontal="true"
             android:id="@+id/time_text"
             android:layout_below="@+id/temp_text"
-            android:text="TIME"
+            android:text="Time"
             android:textColor="#ffffff"
             android:textSize="50sp"
             android:layout_marginTop="50sp"
@@ -46,8 +46,10 @@
             android:id="@+id/time_button"
             android:text="Button"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="200sp"
-            android:layout_below="@+id/time_text"/>
+            android:layout_marginTop="80sp"
+            android:layout_below="@+id/time_text"
+            android:onClick="sendNotification"/>
+
 
     </RelativeLayout>
 
