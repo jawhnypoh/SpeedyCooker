@@ -4,8 +4,11 @@ import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -15,6 +18,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.os.CountDownTimer;
+import android.widget.Toast;
+import com.example.poj.speedycooker.Bluetooth;
 
 import java.io.IOException;
 
@@ -27,7 +32,15 @@ public class MainActivity extends AppCompatActivity {
     private theCountDownTimer myCountDownTimer;
     private NotificationManagerCompat notificationManager;
 
-    private Bluetooth bt;
+    private Handler mHandler;
+
+    private BluetoothAdapter mBluetoothAdapter;
+    private Bluetooth bt = null;
+
+    // Intent request codes
+    private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
+    private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
+    private static final int REQUEST_ENABLE_BT = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,51 +56,29 @@ public class MainActivity extends AppCompatActivity {
         timeButton = (Button)findViewById(R.id.time_button);
         choice1button = (Button)findViewById(R.id.choice1button);
 
-        //bt = new Bluetooth(getApplicationContext(), this);
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        bt = new Bluetooth(getApplicationContext(), mHandler);
+
+        // If the adapter is null, then Bluetooth is not supported
+        if (mBluetoothAdapter == null) {
+            Toast.makeText(getApplicationContext(), "Bluetooth is not available", Toast.LENGTH_LONG).show();
+            finish();
+        }
 
         myButton();
-//        connectBluetooth();
     }
 
-//    public void connectBluetooth() {
-//        // If could not find bluetooth device, error
-//        if(bt.findBT() == -1) {
-//            return;
-//        }
-//
-//        // Try to open a Bluetooth connection
-//        try {
-//            bt.openBTConnection();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//        // Start to listen for data
-//        bt.beginListenForData();
-//    }
-//
-//    // Bluetooth instance calls this function to send new data to the BT device
-//    public void sendBTData() {
-//        try {
-//            bt.sendData((byte)'0');
-//            Log.d(TAG, "Data sending to BT device...");
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            return;
-//        }
-//    }
-//
-//    // Bluetooth instance calls this function when new data is received
-//    public void receiveData(byte[] data) {
-//        // If the data exists and != 0
-//        if(data.length > 0 && data[0] != 0) {
-//            int dataInt = data[0];
-//
-//            Log.d(TAG, "Receiving data: " + data);
-//
-//            tempText.setText("" + dataInt);
-//        }
-//    }
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // If Bluetooth isn't on, ask for it to be turned on
+        if (!mBluetoothAdapter.isEnabled()) {
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+            // Otherwise, setup the chat session
+        }
+    }
 
     public void myButton(){
         final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "001")
@@ -105,17 +96,36 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v){
 
                 Log.d(TAG,"Button clicked");
+
+                sendMessage("Test");
+
+                Toast.makeText(getApplicationContext(), "Sending data to bluetooth device...", Toast.LENGTH_LONG).show();
+
                 myCountDownTimer = new theCountDownTimer(70000, 1);
                 myCountDownTimer.start();
 
             }
         });
+
         choice1button.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
                 notificationManager.notify(001, mBuilder.build());
             }
         });
+    }
+
+    private void sendMessage(String message) {
+        Log.d(TAG, "Message is: " + message);
+        if(message.length() > 0) {
+            // Get the message bytes and tell the BluetoothChatService to write
+            byte[] send = message.getBytes();
+            bt.write(send);
+        }
+    }
+
+    private void receiveMessage() {
+        
     }
 
     public NotificationCompat.Builder buildNot(){
@@ -142,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onTick(long millisUntilFinished) {
 
-            int progress = (int) (millisUntilFinished / 10 % 100);
+            int progress = (int) (millisUntilFinished / 5000);
             int progress1 = (int) (millisUntilFinished / 1000);
 
             int progressPer = (int) ((double)millisUntilFinished/MAX_CONST*100);

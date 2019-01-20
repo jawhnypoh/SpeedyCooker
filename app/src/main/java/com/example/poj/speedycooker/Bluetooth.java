@@ -135,6 +135,20 @@ public class Bluetooth {
         updateUserInterfaceTitle();
     }
 
+    // Write to the ConnectedThread
+    public void write(byte[] out) {
+        Log.d(TAG, "write() called from Bluetooth.java");
+        // Create temporary object
+        ConnectedThread r;
+        // Synchronize a copy of the ConnectedThread
+        synchronized (this) {
+            if (mState != STATE_CONNECTED) return;
+            r = mConnectedThread;
+        }
+        // Perform the write unsynchronized
+        r.write(out);
+    }
+
     // STOP EVERYTHING!!! (All threads)
     public synchronized void stop() {
         Log.d(TAG, "stop");
@@ -259,7 +273,7 @@ public class Bluetooth {
         }
     }
 
-    private class ConnectThread extends Thread {
+    public class ConnectThread extends Thread {
         private final BluetoothSocket mmSocket;
         private final BluetoothDevice mmDevice;
 
@@ -304,7 +318,7 @@ public class Bluetooth {
         }
     }
 
-    private class ConnectedThread extends Thread {
+    public class ConnectedThread extends Thread {
         private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
