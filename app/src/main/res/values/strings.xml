@@ -2,4 +2,5 @@
     <string name="app_name">SpeedyCooker</string>
     <string name="channel_name">WHY</string>
     <string name="channel_description">IS THIS NOT WORKING</string>
+    <string name="none_paired">No devices have been paired</string>
 </resources>

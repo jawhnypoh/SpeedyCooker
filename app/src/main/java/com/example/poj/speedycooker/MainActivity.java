@@ -1,9 +1,12 @@
 package com.example.poj.speedycooker;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -19,6 +22,11 @@ import android.widget.TextView;
 import android.os.CountDownTimer;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.UUID;
+
 public class MainActivity extends AppCompatActivity {
 
     private static String TAG = "MainActivity: ";
@@ -28,13 +36,19 @@ public class MainActivity extends AppCompatActivity {
     private theCountDownTimer myCountDownTimer;
     private NotificationManagerCompat notificationManager;
 
-    private BluetoothAdapter mBluetoothAdapter;
-    private Bluetooth bt = null;
+    // SPP UUID service - this should work for most devices
+    private static final UUID BTMODULEUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-    // Intent request codes
-    private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
-    private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
-    private static final int REQUEST_ENABLE_BT = 3;
+    // String for MAC Address
+    private static String address;
+
+    Handler bluetoothIn;
+    final int handlerState = 0;     // Use to identify handler message
+
+    private BluetoothAdapter mBluetoothAdapter;
+    private BluetoothSocket mBluetoothSocket;
+
+    private ConnectedThread mConnectedThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,50 +64,115 @@ public class MainActivity extends AppCompatActivity {
         timeButton = (Button)findViewById(R.id.time_button);
         choice1button = (Button)findViewById(R.id.choice1button);
 
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        bt = new Bluetooth(getApplicationContext(), mHandler);
+        bluetoothIn = new Handler() {
+            public void handleMessage(Message msg) {
+                if(msg.what == handlerState) {
+                    String readMessage = (String) msg.obj;
+                    tempText.setText("Received data: " + readMessage);
+                }
+            }
+        };
 
-        // If the adapter is null, then Bluetooth is not supported
-        if (mBluetoothAdapter == null) {
-            Toast.makeText(getApplicationContext(), "Bluetooth is not available", Toast.LENGTH_LONG).show();
-            finish();
-        }
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         myButton();
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
+    private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
+        //creates secure outgoing connection with BT device using UUID
+        return  device.createRfcommSocketToServiceRecord(BTMODULEUUID);
+    }
 
-        // If Bluetooth isn't on, ask for it to be turned on
-        if (!mBluetoothAdapter.isEnabled()) {
-            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-            // Otherwise, setup the our application
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        Intent intent = getIntent();
+
+        //Get the MAC address from the DeviceListActivty via EXTRA
+        address = intent.getStringExtra(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+
+        //create device and set the MAC address
+        BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        try {
+            // Don't leave Bluetooth sockets open when we leave the activity
+            mBluetoothSocket.close();
+        } catch (IOException e) {
+            Log.e(TAG, "Couldn't close bluetooth socket. ", e);
         }
     }
 
-    private Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case Constants.MESSAGE_READ:
-                    byte[] readBuf = (byte[]) msg.obj;
-                    // construct a string from the valid bytes in the buffer
-                    String readMessage = new String(readBuf, 0, msg.arg1);
+    //Checks that the Android device Bluetooth is available and prompts to be turned on if off
+    private void checkBTState() {
 
-                    tempText.setText("Received Data: " + readMessage);
-                    break;
-
-                case Constants.MESSAGE_WRITE:
-                    byte[] writeBuf = (byte[]) msg.obj;
-                    // construct a string from the buffer
-                    String writeMessage = new String(writeBuf);
-                    break;
+        if(mBluetoothAdapter == null) {
+            Toast.makeText(getBaseContext(), "Device does not support bluetooth", Toast.LENGTH_LONG).show();
+        } else {
+            if (mBluetoothAdapter.isEnabled()) {
+            } else {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, 1);
             }
         }
-    };
+    }
+
+    // Create new class for connect thread
+    private class ConnectedThread extends Thread {
+        private final InputStream mmInStream;
+        private final OutputStream mmOutStream;
+
+        //creation of the connect thread
+        public ConnectedThread(BluetoothSocket socket) {
+            InputStream tmpIn = null;
+            OutputStream tmpOut = null;
+
+            try {
+                //Create I/O streams for connection
+                tmpIn = socket.getInputStream();
+                tmpOut = socket.getOutputStream();
+            } catch (IOException e) { }
+
+            mmInStream = tmpIn;
+            mmOutStream = tmpOut;
+        }
+
+
+        public void run() {
+            byte[] buffer = new byte[256];
+            int bytes;
+
+            // Keep looping to listen for received messages
+            while (true) {
+                try {
+                    bytes = mmInStream.read(buffer);        	//read bytes from input buffer
+                    String readMessage = new String(buffer, 0, bytes);
+                    // Send the obtained bytes to the UI Activity via handler
+                    bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
+                } catch (IOException e) {
+                    break;
+                }
+            }
+        }
+        //write method
+        public void write(String input) {
+            byte[] msgBuffer = input.getBytes();           //converts entered String into bytes
+            try {
+                mmOutStream.write(msgBuffer);                //write bytes over BT connection via outstream
+            } catch (IOException e) {
+                //if you cannot write, close the application
+                Toast.makeText(getBaseContext(), "Connection Failure", Toast.LENGTH_LONG).show();
+                finish();
+
+            }
+        }
+    }
 
     public void myButton(){
         final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "001")
@@ -112,7 +191,8 @@ public class MainActivity extends AppCompatActivity {
 
                 Log.d(TAG,"Button clicked");
 
-                sendMessage("Test");
+                Toast.makeText(getApplicationContext(), "Sending data to bluetooth device...", Toast.LENGTH_LONG).show();
+                mConnectedThread.write("Test");
 
                 myCountDownTimer = new theCountDownTimer(5000, 1);
                 myCountDownTimer.start();
@@ -126,23 +206,6 @@ public class MainActivity extends AppCompatActivity {
                 notificationManager.notify(001, mBuilder.build());
             }
         });
-    }
-
-    private void sendMessage(String message) {
-
-        Toast.makeText(getApplicationContext(), "Sending data to bluetooth device...", Toast.LENGTH_LONG).show();
-
-
-        Log.d(TAG, "Message is: " + message);
-        if(message.length() > 0) {
-            // Get the message bytes and tell the BluetoothChatService to write
-            byte[] send = message.getBytes();
-            bt.write(send);
-        }
-    }
-
-    private void receiveMessage() {
-
     }
 
     public NotificationCompat.Builder buildNot(){
@@ -187,12 +250,6 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onFinish() {
-//            // Try to close the Bluetooth socket
-//            try {
-//                bt.closeBT();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
 
             timeText.setText("Eyyyyy");
         }
