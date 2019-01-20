@@ -1,5 +1,6 @@
 package com.example.poj.speedycooker;
 
+import android.app.Activity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,7 +12,7 @@ import android.widget.Toast;
 
 import java.io.IOException;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
     private static String TAG = "MainActivity: ";
 
@@ -33,12 +34,12 @@ public class MainActivity extends AppCompatActivity {
         // Create an instance of the Bluetooth class defined in Bluetooth.java
         bt = new Bluetooth(getApplicationContext(), this);
 
-        connectBluetooth();
+//        connectBluetooth();
 
         myFunction();
     }
 
-    public void connectBluetooth() {
+    public void connectBluetooth(View view) {
         // If could not find bluetooth device, error
         if(bt.findBT() == -1) {
             return;
