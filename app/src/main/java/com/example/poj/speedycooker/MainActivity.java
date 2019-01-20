@@ -1,9 +1,5 @@
 package com.example.poj.speedycooker;
 
-import android.app.Activity;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -174,25 +170,26 @@ public class MainActivity extends AppCompatActivity {
             mmOutStream = tmpOut;
         }
 
-
         public void run() {
             byte[] buffer = new byte[1024];
             int bytes;
-
             // Keep looping to listen for received messages
             while (true) {
                 try {
-                    bytes = mmInStream.read(buffer);        	//read bytes from input buffer
-                    String readMessage = new String(buffer, 0, bytes);
+                   while((bytes = mmInStream.read(buffer)) != '\n') {
+                        bytes = mmInStream.read(buffer);            //read bytes from input buffer
+                        String readMessage = new String(buffer, 0, bytes);
 
-                    Log.d(TAG, "readMessage is: " + readMessage);
-                    // Send the obtained bytes to the UI Activity via handler
-                    bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
+                        Log.d(TAG, "readMessage is: " + readMessage);
+                        // Send the obtained bytes to the UI Activity via handler
+                        bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
+                   }
                 } catch (IOException e) {
                     break;
                 }
             }
         }
+
         //write method
         public void write(String input) {
             Log.d(TAG, "input string is: " + input);

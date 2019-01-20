@@ -10,7 +10,7 @@
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="Select Bluetooth device from paired devices:"
         android:visibility="gone"
-        android:background="#666"
+        android:background="#ff7a69"
         android:textColor="#fff"
         android:paddingLeft="5dp"
         />
