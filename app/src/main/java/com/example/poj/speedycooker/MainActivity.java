@@ -14,6 +14,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.os.CountDownTimer;
+import android.widget.Toast;
+
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -23,6 +26,8 @@ public class MainActivity extends AppCompatActivity {
     private Button timeButton;
     private theCountDownTimer myCountDownTimer;
     private NotificationManagerCompat notificationManager;
+
+    Bluetooth bt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
         timeText = (TextView)findViewById(R.id.time_text);
         timeButton = (Button)findViewById(R.id.time_button);
 
+<<<<<<< HEAD
         myButton();
     }
 
@@ -47,17 +53,58 @@ public class MainActivity extends AppCompatActivity {
                 .setContentText("This is a notification")
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
+=======
+        // Create an instance of the Bluetooth class defined in Bluetooth.java
+        bt = new Bluetooth(getApplicationContext(), this);
+
+        connectBluetooth();
+
+        myFunction();
+    }
+
+    public void connectBluetooth() {
+        // If could not find bluetooth device, error
+        if(bt.findBT() == -1) {
+            return;
+        }
+
+        // Try to open a Bluetooth connection
+        try {
+            bt.openBTConnection();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Start to listen for data
+        bt.beginListenForData();
+    }
+
+    // Bluetooth instance calls this function when new data is received
+    public void receiveData(byte[] data) {
+        // If the data exists and != 0
+        if(data.length > 0 && data[0] != 0) {
+            int dataInt = data[0];
+        }
+    }
+
+    public void myFunction(){
+>>>>>>> 936fc95fd6e4a2e84f1af28a570a79caa28015ac
         timeButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
 
                 Log.d(TAG,"Button clicked");
+<<<<<<< HEAD
                     myCountDownTimer = new theCountDownTimer(10000, 1);
                     myCountDownTimer.start();
 
 
                     notificationManager.notify(001, mBuilder.build());
 
+=======
+                myCountDownTimer = new theCountDownTimer(10000, 1);
+                myCountDownTimer.start();
+>>>>>>> 936fc95fd6e4a2e84f1af28a570a79caa28015ac
             }
         });
 
