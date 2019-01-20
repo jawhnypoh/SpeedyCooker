@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
         bluetoothIn = new Handler() {
             public void handleMessage(Message msg) {
                 if(msg.what == handlerState) {
-                    Log.d(TAG, "Content in msg ");
+                    Log.d(TAG, "Content in msg: " + msg);
                     String readMessage = (String) msg.obj;
                     tempText.setText("Data: " + readMessage);
                 }
@@ -76,6 +76,13 @@ public class MainActivity extends AppCompatActivity {
 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         checkBTState();
+
+        String testString = "temp: 75F, time: 10:00, some text";
+        String[] tokens = testString.split(",");
+
+        for(String t: tokens) {
+            Log.d(TAG, "Split testString: " + t);
+        }
 
         myButton();
     }
@@ -169,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         public void run() {
-            byte[] buffer = new byte[256];
+            byte[] buffer = new byte[1024];
             int bytes;
 
             // Keep looping to listen for received messages
@@ -177,6 +184,8 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     bytes = mmInStream.read(buffer);        	//read bytes from input buffer
                     String readMessage = new String(buffer, 0, bytes);
+
+                    Log.d(TAG, "readMessage is: " + readMessage);
                     // Send the obtained bytes to the UI Activity via handler
                     bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
                 } catch (IOException e) {
