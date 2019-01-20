@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         bluetoothIn = new Handler() {
             public void handleMessage(Message msg) {
                 if(msg.what == handlerState) {
+                    Log.d(TAG, "Content in msg ");
                     String readMessage = (String) msg.obj;
                     tempText.setText("Received data: " + readMessage);
                 }
@@ -74,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
         };
 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        checkBTState();
 
         myButton();
     }
@@ -95,6 +97,26 @@ public class MainActivity extends AppCompatActivity {
         //create device and set the MAC address
         BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
 
+        try {
+            mBluetoothSocket = createBluetoothSocket(device);
+        } catch (IOException e) {
+            Toast.makeText(getBaseContext(), "Socket creation failed", Toast.LENGTH_LONG).show();
+        }
+        // Establish the Bluetooth socket connection.
+        try
+        {
+            mBluetoothSocket.connect();
+        } catch (IOException e) {
+            try
+            {
+                mBluetoothSocket.close();
+            } catch (IOException e2)
+            {
+                //insert code to deal with this
+            }
+        }
+        mConnectedThread = new ConnectedThread(mBluetoothSocket);
+        mConnectedThread.start();
     }
 
     @Override
@@ -137,7 +159,9 @@ public class MainActivity extends AppCompatActivity {
                 //Create I/O streams for connection
                 tmpIn = socket.getInputStream();
                 tmpOut = socket.getOutputStream();
-            } catch (IOException e) { }
+            } catch (IOException e) {
+                Log.e(TAG, "Could not set tmpIn and tmpOut. ", e);
+            }
 
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
@@ -162,14 +186,15 @@ public class MainActivity extends AppCompatActivity {
         }
         //write method
         public void write(String input) {
+            Log.d(TAG, "input string is: " + input);
             byte[] msgBuffer = input.getBytes();           //converts entered String into bytes
+
             try {
                 mmOutStream.write(msgBuffer);                //write bytes over BT connection via outstream
             } catch (IOException e) {
                 //if you cannot write, close the application
                 Toast.makeText(getBaseContext(), "Connection Failure", Toast.LENGTH_LONG).show();
                 finish();
-
             }
         }
     }
@@ -189,10 +214,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v){
 
+                Toast.makeText(getApplicationContext(), "Sending data to bluetooth device...", Toast.LENGTH_LONG).show();
+
+                String input = "Test";
+
                 Log.d(TAG,"Button clicked");
 
-                Toast.makeText(getApplicationContext(), "Sending data to bluetooth device...", Toast.LENGTH_LONG).show();
-                mConnectedThread.write("Test");
+                mConnectedThread.write(input);
 
                 myCountDownTimer = new theCountDownTimer(5000, 1);
                 myCountDownTimer.start();

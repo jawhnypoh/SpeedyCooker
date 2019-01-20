@@ -72,7 +72,7 @@ public class DeviceListActivity extends AppCompatActivity {
         }
     }
 
-    // Set up on-click listener for the list (nicked this - unsure)
+    // Set up on-click listener for the list?
     private OnItemClickListener mDeviceClickListener = new OnItemClickListener() {
         public void onItemClick(AdapterView<?> av, View v, int arg2, long arg3) {
 
